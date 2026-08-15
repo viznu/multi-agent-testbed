@@ -10,8 +10,16 @@ from typing import Annotated
 import typer
 
 from testbed_catalog import load_catalog
+from testbed_catalog.availability import IntegrationState, Switches
 from testbed_cli.composition import Registry, Workspace, compose
+from testbed_cli.integrations import (
+    describe,
+    load_index,
+    resolved_locations,
+    switches_path,
+)
 from testbed_cli.loader import apply_overrides, load_manifest
+from testbed_cli.paths import resolve_catalog
 from testbed_cli.session import resume_run, run_experiment
 from testbed_contracts.enums import RunState
 from testbed_contracts.events import OMNISCIENT_VIEW
@@ -28,7 +36,6 @@ app = typer.Typer(
 )
 
 DEFAULT_WORKSPACE = Path(".matb")
-DEFAULT_CATALOG = Path("catalog")
 
 WorkspaceOpt = Annotated[Path, typer.Option("--workspace", "-w", help="Where run state lives.")]
 
@@ -116,12 +123,12 @@ app.add_typer(catalog_app, name="catalog")
 
 @catalog_app.command("list")
 def catalog_list(
-    path: Annotated[Path, typer.Option("--path", help="Catalog directory.")] = DEFAULT_CATALOG,
+    path: Annotated[Path | None, typer.Option("--path", help="Catalog directory.")] = None,
     lane: Annotated[int | None, typer.Option(help="Show one market lane only.")] = None,
     runnable_only: Annotated[bool, typer.Option("--runnable", help="Only what runs here.")] = False,
 ) -> None:
     """List catalog records with their honest maturity."""
-    catalog = load_catalog(path)
+    catalog = load_catalog(resolve_catalog(path).path)
     records = catalog.by_lane(lane) if lane else catalog.records
     if runnable_only:
         records = [r for r in records if r.is_runnable_here]
@@ -140,10 +147,10 @@ def catalog_list(
 
 @catalog_app.command("verify")
 def catalog_verify(
-    path: Annotated[Path, typer.Option("--path", help="Catalog directory.")] = DEFAULT_CATALOG,
+    path: Annotated[Path | None, typer.Option("--path", help="Catalog directory.")] = None,
 ) -> None:
     """Check that no record overstates its own status and every lane is covered."""
-    catalog = load_catalog(path)
+    catalog = load_catalog(resolve_catalog(path).path)
     problems = catalog.verify()
     unknown = catalog.unknown_capabilities()
     if unknown:
@@ -154,6 +161,140 @@ def catalog_verify(
         raise typer.Exit(code=1)
     typer.secho(f"catalog is consistent: {len(catalog)} records, all 15 lanes covered",
                 fg=typer.colors.GREEN)
+
+
+# -- integrations ----------------------------------------------------------
+
+integrations_app = typer.Typer(
+    help="Switch integrations on and off, and see why one is unavailable.",
+    no_args_is_help=True,
+)
+app.add_typer(integrations_app, name="integrations")
+
+_STATE_COLOUR = {
+    IntegrationState.ACTIVE: typer.colors.GREEN,
+    IntegrationState.DISABLED: typer.colors.YELLOW,
+    IntegrationState.NOT_INSTALLED: typer.colors.BRIGHT_BLACK,
+}
+
+
+@integrations_app.command("list")
+def integrations_list(
+    path: Annotated[Path | None, typer.Option("--path", help="Catalog directory.")] = None,
+    show_all: Annotated[
+        bool, typer.Option("--all", help="Include records that have no adapter at all.")
+    ] = False,
+) -> None:
+    """Show every integration that has, or could have, a switch."""
+    index = load_index(path)
+    rows = describe(index)
+    for record_id, status in rows:
+        colour = _STATE_COLOUR.get(status.state, typer.colors.WHITE)
+        typer.secho(f"  {status.state:<14}", fg=colour, nl=False)
+        binding = (
+            f"{status.plugin_group}:{status.plugin_name}"
+            if status.plugin_group
+            else "(not a plug-in)"
+        )
+        _echo(f"{record_id:<44} {binding}")
+        if not status.usable:
+            _echo(f"      {status.reason()}")
+
+    counts = index.counts()
+    _echo("")
+    _echo(
+        f"{counts['active']} active, {counts['disabled']} switched off, "
+        f"{counts['not_installed']} not installed, "
+        f"{counts['no_adapter']} catalogued with no adapter here"
+    )
+    if show_all:
+        _echo("")
+        _echo("records with no adapter (catalogue entries only):")
+        for record_id, status in index.status.items():
+            if status.state is IntegrationState.NO_ADAPTER:
+                _echo(f"  {record_id}")
+
+
+def _set_switch(record_id: str, *, enabled: bool, path: Path | None) -> None:
+    index = load_index(path)
+    if record_id not in index.records:
+        _fail(f"no catalog record {record_id!r}; run `matb integrations list`")
+        return
+    record = index.records[record_id]
+    if record.entry_point is None:
+        _fail(
+            f"{record_id} has no adapter in this repository, so there is nothing to switch. "
+            "Its catalog record describes the intended binding only."
+        )
+        return
+    destination = switches_path()
+    updated = Switches.load(destination).with_change(record_id, enabled=enabled)
+    updated.save(destination)
+    verb = "enabled" if enabled else "disabled"
+    typer.secho(f"{record_id} {verb} in {destination}", fg=typer.colors.GREEN)
+
+    status = load_index(path).status[record_id]
+    if enabled and not status.usable:
+        _echo(f"  still unavailable: {status.reason()}")
+
+
+@integrations_app.command("enable")
+def integrations_enable(
+    record_id: Annotated[str, typer.Argument(help="A catalog record id.")],
+    path: Annotated[Path | None, typer.Option("--path")] = None,
+) -> None:
+    """Switch an integration on."""
+    _set_switch(record_id, enabled=True, path=path)
+
+
+@integrations_app.command("disable")
+def integrations_disable(
+    record_id: Annotated[str, typer.Argument(help="A catalog record id.")],
+    path: Annotated[Path | None, typer.Option("--path")] = None,
+) -> None:
+    """Switch an integration off without uninstalling it.
+
+    A manifest that names it will then fail with a clear error rather than
+    quietly running something else.
+    """
+    _set_switch(record_id, enabled=False, path=path)
+
+
+@integrations_app.command("verify")
+def integrations_verify(
+    path: Annotated[Path | None, typer.Option("--path")] = None,
+) -> None:
+    """List integrations whose packaging details are still unconfirmed.
+
+    An extra that is named in the catalog but absent from `pyproject.toml`, or a
+    required import with no extra to install it, means somebody still has to
+    confirm the distribution name. Guessing one installs the wrong package with
+    full confidence, so these are reported rather than assumed.
+    """
+    import tomllib
+
+    index = load_index(path)
+    declared: set[str] = set()
+    pyproject = Path("pyproject.toml")
+    if pyproject.exists():
+        raw = tomllib.loads(pyproject.read_text("utf-8"))
+        declared = set(raw.get("project", {}).get("optional-dependencies", {}))
+
+    unconfirmed: list[str] = []
+    for record in index.records.values():
+        if record.extra and record.extra not in declared:
+            unconfirmed.append(f"  {record.record_id}: extra {record.extra!r} is not in pyproject")
+        if record.requires and not record.extra:
+            unconfirmed.append(
+                f"  {record.record_id}: requires {list(record.requires)} but declares no extra"
+            )
+    if unconfirmed:
+        _echo("packaging details still to confirm:")
+        for line in sorted(unconfirmed):
+            _echo(line)
+        _echo("")
+    _echo(f"{len(declared)} extras declared: {', '.join(sorted(declared)) or '(none)'}")
+
 
 
 # -- run -------------------------------------------------------------------
@@ -395,10 +536,24 @@ def doctor(workspace: WorkspaceOpt = DEFAULT_WORKSPACE) -> None:
     except Exception as exc:
         _echo(f"workspace       unusable: {exc}")
 
+    catalog_location, switches_location = resolved_locations()
+    _echo(f"catalog         {catalog_location}")
+    _echo(f"switches        {switches_location}")
+    index = load_index()
+    counts = index.counts()
+    _echo(
+        f"integrations    {counts['active']} active, {counts['disabled']} off, "
+        f"{counts['not_installed']} not installed, "
+        f"{counts['no_adapter']} catalogued with no adapter"
+    )
+    for status in index.blocked():
+        _echo(f"  {status.record_id}: {status.reason()}")
+
     _echo("")
-    _echo("not implemented here: Inspect bridge, OCI/gVisor sandboxes, remote agents (A2A),")
-    _echo("MCP tools, scanners, control and interpretability integrations. See the catalog")
-    _echo("for their honest status and docs/ROADMAP.md for where they land.")
+    _echo("Most of the catalog has no adapter here yet: OCI/gVisor sandboxes, the Inspect")
+    _echo("bridge, remote agents (A2A), MCP tools, scanners, control and interpretability")
+    _echo("integrations. Run `matb integrations list --all` for the full picture and see")
+    _echo("docs/ROADMAP.md for where each one lands.")
 
 
 @app.command("runs")

@@ -15,6 +15,8 @@ from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any
 
+from testbed_catalog.availability import IntegrationIndex
+from testbed_cli.integrations import check_available, load_index
 from testbed_contracts.manifest import ExperimentManifest
 from testbed_kernel import Composition
 from testbed_store import LocalArtifactStore, SqliteStore
@@ -128,29 +130,36 @@ class Workspace:
         return SqliteStore(self.db_path), LocalArtifactStore(self.artifacts_path)
 
 
+def _resolve(registry_group: dict[str, Any], group: str, name: str, index: IntegrationIndex):
+    """Look a plug-in up, distinguishing "switched off" from "never existed".
+
+    Order matters: an integration that is present but disabled must say so,
+    rather than being reported as an unknown name.
+    """
+    check_available(index, group, name)
+    found = registry_group.get(name)
+    if found is None:
+        raise KeyError(f"no {group[:-1]} named {name!r} (have: {sorted(registry_group)})")
+    return found
+
+
 def compose(
     manifest: ExperimentManifest,
     workspace: Workspace,
     registry: Registry | None = None,
+    *,
+    index: IntegrationIndex | None = None,
 ) -> tuple[Composition, Registry, SqliteStore, LocalArtifactStore]:
     """Resolve everything a manifest names into a kernel `Composition`."""
     registry = registry or Registry.discover()
+    index = index if index is not None else load_index()
     store, artifacts = workspace.open()
 
-    pack = registry.packs.get(manifest.task_pack.name)
-    if pack is None:
-        raise KeyError(
-            f"no pack named {manifest.task_pack.name!r} (have: {sorted(registry.packs)})"
-        )
-    topology = registry.topologies.get(manifest.world.topology)
-    if topology is None:
-        raise KeyError(
-            f"no topology named {manifest.world.topology!r} "
-            f"(have: {sorted(registry.topologies)})"
-        )
-    runner_factory = registry.runners.get(manifest.runner)
-    if runner_factory is None:
-        raise KeyError(f"no runner named {manifest.runner!r} (have: {sorted(registry.runners)})")
+    pack = _resolve(registry.packs, "packs", manifest.task_pack.name, index)
+    topology = _resolve(registry.topologies, "topologies", manifest.world.topology, index)
+    runner_factory = _resolve(registry.runners, "runners", manifest.runner, index)
+    for spec in manifest.agents:
+        check_available(index, "agents", spec.adapter)
 
     from testbed_adapters.sandboxes.process.sandbox import ProcessSandbox
 

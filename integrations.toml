@@ -1,0 +1,12 @@
+# Integration switches for the multi-agent testbed.
+#
+# `disabled` always wins. `enabled` turns on an integration whose catalog record
+# sets default_enabled = false. Switching an integration off does not uninstall
+# it; a manifest that names it will fail with a clear error rather than silently
+# running something else.
+#
+# Edit by hand, or use `matb integrations enable|disable <record_id>`.
+
+[integrations]
+disabled = []
+enabled = []

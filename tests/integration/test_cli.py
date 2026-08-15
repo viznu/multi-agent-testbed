@@ -9,9 +9,10 @@ import pytest
 from typer.testing import CliRunner
 
 from testbed_cli.main import app
+from testbed_cli.paths import PACKAGED_CATALOG
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
-CATALOG = Path(__file__).resolve().parents[2] / "catalog"
+CATALOG = PACKAGED_CATALOG
 
 runner = CliRunner()
 
@@ -103,6 +104,48 @@ def test_rerun_with_an_override_says_it_is_a_different_configuration(ws):
     assert "different experiment configuration" in result.output
 
 
+def test_integrations_switch_off_and_on(ws, tmp_path: Path, monkeypatch):
+    """Switching an integration off must block the run with a remediation.
+
+    The switch file is resolved through MATB_SWITCHES here so the test cannot
+    disturb the repository's own committed switches.
+    """
+    switches = tmp_path / "integrations.toml"
+    monkeypatch.setenv("MATB_SWITCHES", str(switches))
+
+    off = _invoke("integrations", "disable", "testbed/smoke-pack", "--path", str(CATALOG))
+    assert off.exit_code == 0
+    assert "disabled" in off.output
+    assert switches.exists()
+
+    blocked = runner.invoke(app, ["run", str(EXAMPLES / "solo_lookup.yaml"), "-w", ws])
+    assert blocked.exit_code != 0
+    assert "matb integrations enable testbed/smoke-pack" in str(blocked.exception)
+
+    on = _invoke("integrations", "enable", "testbed/smoke-pack", "--path", str(CATALOG))
+    assert on.exit_code == 0
+    assert _invoke("run", str(EXAMPLES / "solo_lookup.yaml"), "-w", ws).exit_code == 0
+
+
+def test_integrations_list_separates_the_four_states(ws):
+    result = _invoke("integrations", "list", "--path", str(CATALOG))
+    assert result.exit_code == 0
+    assert "active" in result.output
+    assert "catalogued with no adapter here" in result.output
+
+
+def test_cannot_switch_something_that_has_no_adapter(ws):
+    result = _invoke("integrations", "enable", "ukaisi/inspect-ai", "--path", str(CATALOG))
+    assert result.exit_code == 1
+    assert "nothing to switch" in result.output
+
+
+def test_integrations_verify_reports_unconfirmed_packaging(ws):
+    result = _invoke("integrations", "verify", "--path", str(CATALOG))
+    assert result.exit_code == 0
+    assert "extras declared" in result.output
+
+
 def test_catalog_commands(ws):
     listed = _invoke("catalog", "list", "--path", str(CATALOG))
     assert "lane" in listed.output
@@ -113,8 +156,9 @@ def test_catalog_commands(ws):
 def test_doctor_reports_what_is_missing(ws):
     result = _invoke("doctor", "-w", ws)
     assert result.exit_code == 0
-    assert "not implemented here" in result.output
+    assert "no adapter" in result.output
     assert "scripted" in result.output
+    assert "integrations" in result.output
 
 
 def test_bundle_contains_no_secret_values_and_a_declared_level(ws):

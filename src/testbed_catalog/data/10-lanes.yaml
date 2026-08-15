@@ -210,7 +210,10 @@ records:
     capabilities: [preference_protocol]
     runtime: remote
     maturity: external
-    notes: External unless an official runnable or export interface is available.
+    notes: >-
+      Not excluded on cost: it is a live human-preference leaderboard with no
+      runnable interface. At most, published exports can be consumed as data. A
+      native blinded pairwise protocol is the executable substitute.
 
   # -- lane 11: interpretability-based evaluation ---------------------------
   - record_id: transformerlensorg/transformerlens

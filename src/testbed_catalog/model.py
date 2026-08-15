@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from testbed_contracts.enums import Maturity, Runtime
@@ -15,6 +17,14 @@ CATALOG_CAPABILITIES: tuple[str, ...] = (
     "scanner", "discovery_campaign", "control_campaign", "interpretability_probe",
     "optimizer", "telemetry_sink", "sandbox", "assurance_profile", "report_exporter",
 )
+
+
+PluginGroup = Literal["packs", "topologies", "agents", "runners", "scorers"]
+"""The plug-in groups a catalog record can register into.
+
+Closed on purpose: a new *tool* is a new record, but a new *kind of extension
+point* would be a change to the kernel's contracts and must be argued for.
+"""
 
 
 class Lane(BaseModel):
@@ -70,9 +80,42 @@ class CatalogRecord(BaseModel):
     image_digest: str | None = None
     expected_cost_usd: float | None = None
     contamination_notes: str = ""
+    #: Whether a human has confirmed that `source_url` is the canonical home of
+    #: this project. Several projects in this space share a name, so an
+    #: unverified URL is a gap to close, not a detail.
+    source_verified: bool = False
     supported_drivers: tuple[str, ...] = ()
     entry_point: str | None = None
     notes: str = ""
+
+    # -- switching -------------------------------------------------------
+    #: The pip extra that installs this integration's dependencies, if any.
+    #: `pip install multi-agent-testbed[<extra>]`.
+    extra: str | None = None
+    #: Importable module names that must be present for the adapter to work.
+    #: Probed with `find_spec`; never imported, so probing stays cheap.
+    requires: tuple[str, ...] = ()
+    #: Executables that must be on PATH.
+    requires_binaries: tuple[str, ...] = ()
+    #: Which plug-in group this record registers into, and under what name.
+    #: A manifest refers to the integration by `plugin_name`.
+    plugin_group: PluginGroup | None = None
+    plugin_name: str | None = None
+    #: Whether the integration is on by default once its dependencies exist.
+    #: Set False for anything expensive, networked or otherwise opt-in.
+    default_enabled: bool = True
+
+    @model_validator(mode="after")
+    def _plugin_fields_agree(self) -> CatalogRecord:
+        if bool(self.plugin_group) != bool(self.plugin_name):
+            raise ValueError(
+                f"{self.record_id}: plugin_group and plugin_name must be set together"
+            )
+        if self.plugin_name and not self.entry_point:
+            raise ValueError(
+                f"{self.record_id}: a record that registers a plug-in needs an entry_point"
+            )
+        return self
 
     @model_validator(mode="after")
     def _publisher_qualified(self) -> CatalogRecord:
@@ -97,6 +140,8 @@ class CatalogRecord(BaseModel):
         gaps: list[str] = []
         if not self.source_url:
             gaps.append("source_url")
+        elif not self.source_verified:
+            gaps.append("source URL not yet verified as canonical")
         if not self.revision or self.revision in ("main", "master", "latest"):
             gaps.append("pinned revision (a moving ref is not a pin)")
         if not self.license:

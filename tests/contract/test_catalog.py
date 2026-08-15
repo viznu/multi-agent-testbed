@@ -12,9 +12,10 @@ import pytest
 
 from testbed_catalog import CatalogError, load_catalog
 from testbed_catalog.model import CatalogRecord
+from testbed_cli.paths import PACKAGED_CATALOG
 from testbed_contracts.enums import Maturity, Runtime
 
-CATALOG = Path(__file__).resolve().parents[2] / "catalog"
+CATALOG = PACKAGED_CATALOG
 
 
 @pytest.fixture(scope="module")

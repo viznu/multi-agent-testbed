@@ -1,0 +1,80 @@
+# Deliberately excluded, recorded so the exclusion is visible and reversible.
+#
+# Project policy: no commercial or hosted-only services. They add a paid
+# dependency, a network dependency and an account boundary to a testbed whose
+# whole value is that a result can be reproduced by someone else later.
+#
+# These are `external` records with no adapter and no extra. Nothing here can be
+# switched on, because nothing here has been built. If the policy changes, the
+# record already states which port it would bind to.
+records:
+  - record_id: langchain/langsmith
+    title: LangSmith
+    lane: 2
+    capabilities: [telemetry_sink, scorer]
+    runtime: remote
+    maturity: external
+    notes: "Excluded: commercial hosted service. Langfuse or Phoenix covers the same port."
+
+  - record_id: braintrust/braintrust
+    title: Braintrust
+    lane: 2
+    capabilities: [telemetry_sink, scorer]
+    runtime: remote
+    maturity: external
+    notes: "Excluded: commercial hosted service."
+
+  - record_id: humanloop/humanloop
+    title: Humanloop
+    lane: 2
+    capabilities: [telemetry_sink, scorer]
+    runtime: remote
+    maturity: external
+    notes: "Excluded: commercial hosted service."
+
+  - record_id: galileo/galileo
+    title: Galileo
+    lane: 2
+    capabilities: [telemetry_sink, scorer]
+    runtime: remote
+    maturity: external
+    notes: "Excluded: commercial hosted service."
+
+  - record_id: wandb/weave
+    title: Weave / W&B evaluation tooling
+    lane: 2
+    capabilities: [telemetry_sink, scorer]
+    runtime: remote
+    maturity: external
+    notes: >-
+      Excluded: the evaluation product is tied to a hosted account. MLflow covers
+      the same telemetry port without one.
+
+  - record_id: openai/evals-api
+    title: OpenAI Evals API (hosted)
+    lane: 2
+    capabilities: [runner, scorer]
+    runtime: remote
+    maturity: external
+    notes: >-
+      Excluded: metered hosted service. The open-source openai/evals repository is
+      a separate record and stays available as a dataset source.
+
+  - record_id: anthropic/internal-cbrn-cyber-suites
+    title: Frontier-lab internal CBRN and cyber-uplift suites
+    lane: 5
+    capabilities: [benchmark]
+    runtime: remote
+    maturity: external
+    notes: >-
+      Unreleased. Recorded so that the gap in lane 5 coverage is explicit rather
+      than invisible: the most safety-relevant evaluations in this lane are the
+      ones no external testbed can run.
+
+  - record_id: anthropic/constitutional-classifier-redteam
+    title: Constitutional-classifier red-team infrastructure
+    lane: 9
+    capabilities: [discovery_campaign]
+    runtime: remote
+    maturity: external
+    notes: "Unreleased infrastructure; recorded for completeness."

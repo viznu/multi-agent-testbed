@@ -14,6 +14,18 @@ dependencies = [
 
 [project.optional-dependencies]
 parquet = ["pyarrow>=16.0"]
+
+# Integration extras. Each one switches on the adapters whose catalog record
+# names it, and `matb integrations` reports what is on, off or missing.
+#
+# Only extras whose distribution names are confirmed appear here. Several
+# catalog records name an extra that is not yet listed: their import and
+# distribution names still need verifying, and guessing one would produce a
+# confident install of the wrong package. `matb integrations verify` lists them.
+lm-eval = ["lm-eval>=0.4"]
+telemetry = ["opentelemetry-sdk>=1.25"]
+envs = ["pettingzoo>=1.24"]
+interp = ["transformer-lens>=2.0", "nnsight>=0.3"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
@@ -52,6 +64,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
+# The catalog ships inside the distribution so a pip-installed testbed resolves
+# the same records as one run from a source tree.
+artifacts = ["src/testbed_catalog/data/*.yaml"]
 packages = [
     "src/testbed_contracts",
     "src/testbed_pack_sdk",

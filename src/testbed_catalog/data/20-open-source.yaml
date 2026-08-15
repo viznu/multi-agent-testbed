@@ -1,0 +1,488 @@
+# Open-source integration targets.
+#
+# Every record here is `stub`: the adapter does not exist yet. What each record
+# DOES carry is the binding decision -- which existing port the tool would plug
+# into, which pip extra would install it, and which import proves it is present.
+# That is the difference between a wish list and a plan.
+#
+# `source_verified: false` means nobody has confirmed the URL is the canonical
+# home of that project. Several projects here share a name (Prism the
+# eval-science tool vs PRISM Eval's BET; Orbit; Petri), so an unverified URL is
+# a gap that blocks certification, not a detail.
+records:
+  # -- lane 1: frameworks and harnesses -----------------------------------
+  - record_id: eleutherai/lm-evaluation-harness
+    title: lm-evaluation-harness
+    lane: 1
+    capabilities: [runner, benchmark, verifier]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/EleutherAI/lm-evaluation-harness
+    license: MIT
+    extra: lm-eval
+    requires: [lm_eval]
+    notes: >-
+      Highest coverage per adapter in the whole catalog: one bridge reaches most
+      of lane 3. Integrated as a task/metric source rather than as a runner --
+      see testbed/lm-eval-pack -- so World keeps ownership of scheduling.
+
+  - record_id: stanford-crfm/helm
+    title: HELM
+    lane: 1
+    capabilities: [runner, benchmark]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/stanford-crfm/helm
+    notes: >-
+      Large overlap with lm-eval for lane 3. Low marginal value once the lm-eval
+      bridge exists; worth revisiting only for scenarios HELM covers uniquely.
+
+  - record_id: openai/evals
+    title: OpenAI Evals (open-source repository)
+    lane: 1
+    capabilities: [benchmark, scorer]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/openai/evals
+    notes: >-
+      The repository is open source, but its runner is bound to a metered API.
+      Usable as a dataset and rubric source; the hosted Evals API is a separate,
+      excluded record.
+
+  - record_id: metr/vivaria
+    title: Vivaria
+    lane: 1
+    capabilities: [runner, sandbox]
+    runtime: oci
+    maturity: stub
+    notes: Heavy infrastructure; revisit only if METR-style task suites are adopted.
+
+  - record_id: wittlab/orbit
+    title: Orbit
+    lane: 1
+    capabilities: [runner, topology, world]
+    runtime: in_process
+    maturity: stub
+    notes: >-
+      Closest prior art for Inspect-native many-agent security experiments. Read
+      before building the Inspect bridge, but do not adopt its shape: its
+      orchestration and scheduler live inside its Inspect extension, which is
+      exactly the coupling this kernel rejects. Publisher unconfirmed.
+
+  # -- lane 2: product eval / LLMOps (open-source only) --------------------
+  - record_id: promptfoo/promptfoo
+    title: promptfoo
+    lane: 2
+    capabilities: [scorer, benchmark]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/promptfoo/promptfoo
+    requires_binaries: [promptfoo]
+    notes: Node-based CLI, so it binds as a subprocess scorer rather than a Python import.
+
+  - record_id: explodinggradients/ragas
+    title: Ragas
+    lane: 2
+    capabilities: [scorer]
+    runtime: in_process
+    maturity: stub
+    source_url: https://github.com/explodinggradients/ragas
+    extra: product-eval
+    requires: [ragas]
+
+  - record_id: confident-ai/deepeval
+    title: DeepEval
+    lane: 2
+    capabilities: [scorer]
+    runtime: in_process
+    maturity: stub
+    source_url: https://github.com/confident-ai/deepeval
+    extra: product-eval
+    requires: [deepeval]
+
+  - record_id: truera/trulens
+    title: TruLens
+    lane: 2
+    capabilities: [scorer, telemetry_sink]
+    runtime: in_process
+    maturity: stub
+    extra: product-eval
+    requires: [trulens]
+
+  - record_id: arize-ai/phoenix
+    title: Arize Phoenix
+    lane: 2
+    capabilities: [telemetry_sink]
+    runtime: remote
+    maturity: stub
+    source_url: https://github.com/Arize-ai/phoenix
+    extra: telemetry
+    requires: [phoenix]
+    notes: One OpenTelemetry sink adapter covers Phoenix, Langfuse and MLflow together.
+
+  - record_id: mlflow/mlflow
+    title: MLflow GenAI tracing
+    lane: 2
+    capabilities: [telemetry_sink]
+    runtime: remote
+    maturity: stub
+    source_url: https://github.com/mlflow/mlflow
+    extra: telemetry
+    requires: [mlflow]
+
+  # -- lane 3: static knowledge and reasoning ------------------------------
+  # Individual datasets are reached through the lm-eval bridge rather than
+  # given one record each; testbed/lm-eval-pack is the integration.
+  - record_id: google/big-bench
+    title: BIG-bench / BIG-bench Hard
+    lane: 3
+    capabilities: [benchmark]
+    runtime: subprocess
+    maturity: external
+    contamination_notes: Reachable through lm-eval; contamination is significant.
+
+  - record_id: lm-sys/mt-bench
+    title: MT-Bench
+    lane: 3
+    capabilities: [benchmark, judge, preference_protocol]
+    runtime: in_process
+    maturity: stub
+    notes: >-
+      A judge protocol plus a dataset. Better implemented natively as a
+      preference protocol than integrated as a harness.
+
+  - record_id: cais/humanitys-last-exam
+    title: Humanity's Last Exam
+    lane: 3
+    capabilities: [benchmark]
+    runtime: remote
+    maturity: external
+    notes: Held-out set; no local execution.
+
+  - record_id: epoch/frontiermath
+    title: FrontierMath
+    lane: 3
+    capabilities: [benchmark]
+    runtime: remote
+    maturity: external
+    notes: Held-out set; access-controlled.
+
+  - record_id: fchollet/arc-agi
+    title: ARC-AGI
+    lane: 3
+    capabilities: [benchmark, verifier]
+    runtime: in_process
+    maturity: stub
+    notes: Public training set is usable; the evaluation set is held out.
+
+  # -- lane 4: agentic capability -------------------------------------------
+  - record_id: princeton-nlp/swe-bench
+    title: SWE-bench (+ Verified, Multimodal)
+    lane: 4
+    capabilities: [benchmark, verifier, sandbox]
+    runtime: oci
+    maturity: stub
+    source_url: https://github.com/princeton-nlp/SWE-bench
+    notes: Blocked on the OCI sandbox adapter, not on the benchmark itself.
+
+  - record_id: web-arena-x/webarena
+    title: WebArena
+    lane: 4
+    capabilities: [world, benchmark, sandbox]
+    runtime: oci
+    maturity: stub
+    source_url: https://github.com/web-arena-x/webarena
+
+  - record_id: xlang-ai/osworld
+    title: OSWorld
+    lane: 4
+    capabilities: [world, benchmark, sandbox]
+    runtime: oci
+    maturity: stub
+    source_url: https://github.com/xlang-ai/OSWorld
+
+  - record_id: sierra-research/tau-bench
+    title: tau-bench
+    lane: 4
+    capabilities: [world, benchmark]
+    runtime: subprocess
+    maturity: stub
+    notes: >-
+      Reference prior art for dual-control simulated-user tasks; a good
+      SessionDriver stress case.
+
+  - record_id: openai/mle-bench
+    title: MLE-bench
+    lane: 4
+    capabilities: [benchmark, sandbox]
+    runtime: oci
+    maturity: stub
+
+  - record_id: metr/re-bench
+    title: RE-Bench
+    lane: 4
+    capabilities: [benchmark, sandbox]
+    runtime: oci
+    maturity: stub
+
+  # -- lane 5: dangerous capability -----------------------------------------
+  - record_id: ukaisi/agentharm
+    title: AgentHarm
+    lane: 5
+    capabilities: [benchmark, scorer]
+    runtime: in_process
+    maturity: stub
+    data_terms: Review required. Restricted pack family; gated on a written threat model.
+
+  - record_id: meta/cyberseceval
+    title: CyberSecEval
+    lane: 5
+    capabilities: [benchmark, scorer]
+    runtime: subprocess
+    maturity: stub
+
+  - record_id: nickatomlin/sad
+    title: SAD (Situational Awareness Dataset)
+    lane: 5
+    capabilities: [benchmark]
+    runtime: in_process
+    maturity: stub
+    notes: Publisher unconfirmed.
+
+  # -- lane 6: long-horizon and economic agency -----------------------------
+  - record_id: openai/gdpval
+    title: GDPval
+    lane: 6
+    capabilities: [benchmark]
+    runtime: remote
+    maturity: external
+    notes: Publisher-controlled; no runnable interface assumed.
+
+  # -- lane 7: auditing and discovery ---------------------------------------
+  - record_id: anthropic/model-written-evals
+    title: Model-written evaluations (method)
+    lane: 7
+    capabilities: [discovery_campaign]
+    runtime: in_process
+    maturity: stub
+    notes: >-
+      A method, not a package. Implemented as a composition recipe over existing
+      hooks; generated cases enter quarantine by construction.
+
+  - record_id: anthropic/red-teaming-lms-with-lms
+    title: Red-teaming language models with language models (method)
+    lane: 7
+    capabilities: [discovery_campaign]
+    runtime: in_process
+    maturity: stub
+    notes: A method. Same treatment as model-written evals.
+
+  - record_id: google-deepmind/gram
+    title: Gram
+    lane: 7
+    capabilities: [discovery_campaign]
+    runtime: in_process
+    maturity: external
+    source_url: https://deepmind.google/research/publications/252981/
+    notes: Publication; no released implementation assumed.
+
+  # -- lane 8: transcript analysis and eval science -------------------------
+  - record_id: transluce/docent
+    title: Docent
+    lane: 8
+    capabilities: [scanner]
+    runtime: remote
+    maturity: stub
+    notes: Integrable only if a runnable or export interface is published.
+
+  - record_id: apollo-research/science-of-evals
+    title: Science-of-evals agenda
+    lane: 8
+    capabilities: [scanner]
+    runtime: in_process
+    maturity: external
+    notes: >-
+      Position work, not tooling. Recorded so the reasoning it contains has a
+      home; it shapes which experiments are run, not what is imported.
+
+  # -- lane 9: jailbreak and adversarial robustness -------------------------
+  - record_id: jailbreakbench/jailbreakbench
+    title: JailbreakBench
+    lane: 9
+    capabilities: [benchmark, scorer]
+    runtime: in_process
+    maturity: stub
+    source_url: https://github.com/JailbreakBench/jailbreakbench
+
+  - record_id: alexandrasouly/strongreject
+    title: StrongREJECT
+    lane: 9
+    capabilities: [scorer]
+    runtime: in_process
+    maturity: stub
+    notes: Publisher unconfirmed.
+
+  - record_id: azure/pyrit
+    title: PyRIT
+    lane: 9
+    capabilities: [scanner, discovery_campaign]
+    runtime: subprocess
+    maturity: stub
+    extra: redteam
+    requires: [pyrit]
+    notes: >-
+      Import and distribution names both need confirming: an unrelated project
+      has held the name `pyrit` on PyPI.
+
+  - record_id: prism-eval/bet
+    title: PRISM Eval Behavior Elicitation Tool
+    lane: 9
+    capabilities: [discovery_campaign]
+    runtime: remote
+    maturity: external
+    notes: >-
+      Distinct from the Prism science-of-evals work in lane 8. The name collision
+      is exactly why record ids here are publisher-qualified.
+
+  # -- lane 10: preference and arena ----------------------------------------
+  - record_id: tatsu-lab/alpaca-eval
+    title: AlpacaEval
+    lane: 10
+    capabilities: [preference_protocol, judge]
+    runtime: in_process
+    maturity: stub
+    source_url: https://github.com/tatsu-lab/alpaca_eval
+
+  - record_id: lmarena/arena-hard
+    title: Arena-Hard
+    lane: 10
+    capabilities: [preference_protocol, benchmark]
+    runtime: in_process
+    maturity: stub
+
+  - record_id: allenai/wildbench
+    title: WildBench
+    lane: 10
+    capabilities: [preference_protocol, benchmark]
+    runtime: in_process
+    maturity: stub
+
+  # -- lane 11: interpretability --------------------------------------------
+  - record_id: decoderesearch/saelens
+    title: SAELens
+    lane: 11
+    capabilities: [interpretability_probe]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/decoderesearch/SAELens
+    extra: interp
+    requires: [sae_lens]
+
+  - record_id: eleuther/elk
+    title: Eliciting Latent Knowledge
+    lane: 11
+    capabilities: [interpretability_probe]
+    runtime: in_process
+    maturity: external
+    notes: A research problem and a literature, not a package to integrate.
+
+  # -- lane 12: AI control ---------------------------------------------------
+  - record_id: redwoodresearch/control-protocols
+    title: Redwood trusted/untrusted monitoring protocols
+    lane: 12
+    capabilities: [control_campaign]
+    runtime: in_process
+    maturity: stub
+    notes: >-
+      Protocols, not a package. Composed from existing hooks: main task, covert
+      side task, monitor, policy, and separate usefulness/safety scoring.
+
+  # -- lane 13: multi-agent environments ------------------------------------
+  - record_id: google-deepmind/concordia
+    title: Concordia
+    lane: 13
+    capabilities: [world, benchmark]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/google-deepmind/concordia
+    extra: envs
+    requires: [concordia]
+
+  - record_id: schroeder-de-witt/secret-collusion
+    title: Secret Collusion
+    lane: 13
+    capabilities: [world, benchmark, scorer]
+    runtime: in_process
+    maturity: stub
+    notes: >-
+      Steganographic collusion between agents. Directly relevant to the security
+      dimension; publisher and release status need confirming.
+
+  - record_id: caif/multi-agent-risks
+    title: Multi-Agent Risks from Advanced AI
+    lane: 13
+    capabilities: [world]
+    runtime: in_process
+    maturity: external
+    notes: >-
+      A taxonomy, not a tool. Recorded because it is the best available map of
+      which multi-agent experiments are worth running.
+
+  # -- lane 14: orchestration frameworks -------------------------------------
+  - record_id: camel-ai/camel
+    title: CAMEL
+    lane: 14
+    capabilities: [agent]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/camel-ai/camel
+    extra: frameworks
+    requires: [camel]
+
+  - record_id: crewai/crewai
+    title: CrewAI
+    lane: 14
+    capabilities: [agent]
+    runtime: subprocess
+    maturity: stub
+    extra: frameworks
+    requires: [crewai]
+
+  - record_id: openai/agents-sdk
+    title: OpenAI Agents SDK (formerly Swarm)
+    lane: 14
+    capabilities: [agent]
+    runtime: subprocess
+    maturity: stub
+    extra: frameworks
+    requires: [agents]
+    notes: Import name needs confirming; it changed when Swarm became the Agents SDK.
+
+  - record_id: geekan/metagpt
+    title: MetaGPT
+    lane: 14
+    capabilities: [agent]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/geekan/MetaGPT
+    extra: frameworks
+    requires: [metagpt]
+
+  # -- lane 15: governance ----------------------------------------------------
+  - record_id: ukaisi/pre-deployment-testing
+    title: UK AISI / US CAISI pre-deployment testing regimes
+    lane: 15
+    capabilities: [assurance_profile]
+    runtime: remote
+    maturity: external
+    notes: A process, not tooling. Evidence bundles feed it; it is not automated here.
+
+  - record_id: frontier-labs/safety-frameworks
+    title: Frontier safety frameworks (RSP, Preparedness, Frontier Safety)
+    lane: 15
+    capabilities: [assurance_profile, report_exporter]
+    runtime: in_process
+    maturity: external
+    notes: >-
+      Organisational commitments. An exporter can map evidence to their
+      categories; it can never conclude that a commitment was met.

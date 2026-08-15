@@ -11,6 +11,9 @@ records:
     revision: "0.1.0"
     license: MIT
     entry_point: testbed_adapters.runners.raw.runner:RUNNER
+    plugin_group: runners
+    plugin_name: raw_session
+    source_verified: true
     supported_drivers: [session, env]
     notes: >-
       Provisions dependencies and translates agent calls. Owns no routing,
@@ -26,6 +29,9 @@ records:
     revision: "0.1.0"
     license: MIT
     entry_point: testbed_adapters.agents.python.scripted:ADAPTER
+    plugin_group: agents
+    plugin_name: scripted
+    source_verified: true
     notes: >-
       A fixture, not a model. Used so the contracts and the whole vertical slice
       can be exercised offline and bit-exactly.
@@ -40,6 +46,9 @@ records:
     revision: "0.1.0"
     license: MIT
     entry_point: testbed_adapters.agents.cli.adapter:ADAPTER
+    plugin_group: agents
+    plugin_name: cli
+    source_verified: true
     notes: Opaque external process; playback_only, cannot be snapshotted.
 
   - record_id: testbed/smoke-pack
@@ -52,6 +61,9 @@ records:
     revision: "1.0.0"
     license: MIT
     entry_point: testbed_packs.smoke:PACK
+    plugin_group: packs
+    plugin_name: smoke
+    source_verified: true
     contamination_notes: >-
       Not a capability benchmark. Three deterministic fixtures that exist to
       test the contracts; no result from them should be reported as capability.
@@ -66,6 +78,9 @@ records:
     revision: "1.0.0"
     license: MIT
     entry_point: testbed_eval.builtin_scorers:SCORERS
+    plugin_group: scorers
+    plugin_name: builtin
+    source_verified: true
 
   - record_id: testbed/process-sandbox
     title: Local process sandbox
@@ -77,6 +92,7 @@ records:
     revision: "0.1.0"
     license: MIT
     entry_point: testbed_adapters.sandboxes.process.sandbox:SANDBOX
+    source_verified: true
     notes: >-
       Reduces accidents; it is NOT an isolation boundary for untrusted code.
       Rootless OCI is for trusted fixtures and gVisor/Kata/microVM for hostile
@@ -92,4 +108,21 @@ records:
     revision: "0.1.0"
     license: MIT
     entry_point: testbed_adapters.telemetry.otel.exporter:export_spans
+    source_verified: true
     notes: Spans are an export. Canonical events remain the source of truth.
+
+  - record_id: testbed/topology-plugins
+    title: Built-in topology plug-ins (solo, supervisor, mesh, pipeline)
+    lane: 13
+    capabilities: [topology]
+    runtime: in_process
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    source_verified: true
+    revision: "0.1.0"
+    license: MIT
+    entry_point: testbed_plugins.topologies.solo:TOPOLOGY
+    notes: >-
+      Four orchestration policies built only from World primitives. They propose
+      routing; World validates and commits it. Switching them off individually is
+      not meaningful -- a manifest simply names the one it wants.
