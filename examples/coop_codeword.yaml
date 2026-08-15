@@ -1,0 +1,66 @@
+# Fixture 2: a cooperative two-agent task with private complementary
+# information. Neither agent can succeed alone, so this is a real coordination
+# test rather than two agents doing the same work twice.
+experiment_id: smoke_coop_codeword
+owner: testbed
+description: Cooperative two-agent task with private complementary information.
+tags: [smoke, cooperative]
+
+task_pack:
+  name: smoke
+  revision: 1.0.0
+  sample_selector: [coop_codeword]
+  license_accepted: true
+
+runner: raw_session
+
+# The compute-matched single-agent baseline this arm must be compared against.
+baseline_experiment: smoke_coop_baseline
+
+world:
+  driver: session
+  topology: mesh
+  communication:
+    delivery_latency: 1
+    default_visibility: public
+
+payoff:
+  mode: cooperative
+  team_weight: 1.0
+
+agents:
+  - agent_id: researcher_1
+    adapter: scripted
+    role: worker
+    prompt: "You hold the first half of the code word."
+    config:
+      steps:
+        - kind: message
+          content: "{private.share}"
+          recipients: [researcher_2]
+        - kind: final
+          content: "Handed over my half."
+
+  - agent_id: researcher_2
+    adapter: scripted
+    role: worker
+    prompt: "You hold the second half of the code word."
+    config:
+      steps:
+        - kind: final
+          content: "Waiting for the first half."
+        - kind: world_action
+          action: { kind: submit, answer: "{inbox}{private.share}" }
+
+seeds: [0, 1, 2]
+repetitions: 1
+
+limits:
+  max_logical_time: 20
+  checkpoint_every_events: 4
+
+scorers:
+  - { name: task_success, version: 1.0.0, kind: deterministic }
+  - { name: efficiency,   version: 1.0.0, kind: efficiency }
+  - { name: coordination, version: 1.0.0, kind: coordination }
+  - { name: safety,       version: 1.0.0, kind: safety }

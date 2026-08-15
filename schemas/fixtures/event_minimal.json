@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "event_id": "evt_fixture_minimal",
+  "run_id": "run_fixture",
+  "attempt_id": "att_fixture",
+  "sequence": 0,
+  "logical_time": 0,
+  "recorded_at": "2026-01-01T00:00:00Z",
+  "event_kind": "run.started",
+  "actor_id": "world",
+  "target_ids": [],
+  "causation_id": null,
+  "correlation_id": null,
+  "idempotency_key": null,
+  "visibility_policy": "public",
+  "authorized_view_ids": [],
+  "payload": {
+    "run_id": "run_fixture"
+  },
+  "payload_ref": null,
+  "payload_media_type": "application/json",
+  "payload_hash": null,
+  "resource_delta": {
+    "model_calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "tool_calls": 0,
+    "cost_usd": 0.0,
+    "wall_seconds": 0.0,
+    "message_bytes": 0
+  },
+  "policy_decision": null,
+  "redaction_metadata": {}
+}

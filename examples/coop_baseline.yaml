@@ -1,0 +1,54 @@
+# The compute-matched single-agent baseline for `smoke_coop_codeword`.
+#
+# It runs the same task case and is judged by the same verifier. The agent holds
+# both halves privately, and its turn is padded to the same number of model
+# calls the two-agent team spends, so a difference in success cannot be
+# explained by a difference in compute.
+experiment_id: smoke_coop_baseline
+owner: testbed
+description: Compute-matched single-agent baseline for the cooperative task.
+tags: [smoke, baseline, single_agent]
+
+task_pack:
+  name: smoke
+  revision: 1.0.0
+  sample_selector: [coop_codeword]
+  license_accepted: true
+
+runner: raw_session
+
+world:
+  driver: session
+  topology: solo
+  information:
+    private_facts:
+      researcher_solo:
+        first: alpha
+        second: omega
+
+agents:
+  - agent_id: researcher_solo
+    adapter: scripted
+    role: worker
+    prompt: "You hold both halves of the code word."
+    config:
+      steps:
+        - - kind: message
+            content: "I hold both halves."
+          - kind: message
+            content: "Combining them now."
+          - kind: world_action
+            action: { kind: submit, answer: "{private.first}{private.second}" }
+
+seeds: [0, 1, 2]
+repetitions: 1
+
+limits:
+  max_logical_time: 20
+  checkpoint_every_events: 4
+
+scorers:
+  - { name: task_success, version: 1.0.0, kind: deterministic }
+  - { name: efficiency,   version: 1.0.0, kind: efficiency }
+  - { name: coordination, version: 1.0.0, kind: coordination }
+  - { name: safety,       version: 1.0.0, kind: safety }

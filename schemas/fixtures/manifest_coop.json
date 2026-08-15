@@ -1,0 +1,185 @@
+{
+  "manifest_schema_version": "1.0.0",
+  "experiment_id": "smoke_coop_codeword",
+  "owner": "testbed",
+  "description": "Cooperative two-agent task with private complementary information.",
+  "tags": [
+    "smoke",
+    "cooperative"
+  ],
+  "created_at": "2026-08-15T07:53:33.438149Z",
+  "task_pack": {
+    "name": "smoke",
+    "revision": "1.0.0",
+    "dataset_digest": null,
+    "sample_selector": [
+      "coop_codeword"
+    ],
+    "eval_set_kind": "frozen_eval",
+    "license_accepted": true,
+    "config": {}
+  },
+  "runner": "raw_session",
+  "world": {
+    "driver": "session",
+    "env_mode": "aec",
+    "topology": "mesh",
+    "topology_config": {},
+    "communication": {
+      "max_message_bytes": 65536,
+      "broadcast_allowed": true,
+      "default_visibility": "public",
+      "delivery_latency": 1
+    },
+    "memory": {
+      "kind": "private",
+      "retention": null
+    },
+    "information": {
+      "public_facts": {},
+      "private_facts": {}
+    },
+    "clock_step": 1
+  },
+  "agents": [
+    {
+      "agent_id": "researcher_1",
+      "adapter": "scripted",
+      "role": "worker",
+      "model": "fake/deterministic",
+      "prompt": "You hold the first half of the code word.",
+      "config": {
+        "steps": [
+          {
+            "kind": "message",
+            "content": "{private.share}",
+            "recipients": [
+              "researcher_2"
+            ]
+          },
+          {
+            "kind": "final",
+            "content": "Handed over my half."
+          }
+        ]
+      },
+      "tool_grants": [],
+      "credentials_policy": "none",
+      "budget_model_calls": null,
+      "budget_cost_usd": null,
+      "reproducibility": "bit_exact"
+    },
+    {
+      "agent_id": "researcher_2",
+      "adapter": "scripted",
+      "role": "worker",
+      "model": "fake/deterministic",
+      "prompt": "You hold the second half of the code word.",
+      "config": {
+        "steps": [
+          {
+            "kind": "final",
+            "content": "Waiting for the first half."
+          },
+          {
+            "kind": "world_action",
+            "action": {
+              "kind": "submit",
+              "answer": "{inbox}{private.share}"
+            }
+          }
+        ]
+      },
+      "tool_grants": [],
+      "credentials_policy": "none",
+      "budget_model_calls": null,
+      "budget_cost_usd": null,
+      "reproducibility": "bit_exact"
+    }
+  ],
+  "team": {
+    "team_config_id": "default",
+    "partner_population_id": null,
+    "partner_sampling": "fixed"
+  },
+  "payoff": {
+    "mode": "cooperative",
+    "team_weight": 1.0,
+    "individual_weight": 0.0,
+    "welfare": "sum"
+  },
+  "sandbox": {
+    "backend": "process",
+    "image_digest": null,
+    "network": "deny",
+    "cpu_limit": 1.0,
+    "memory_mb": 512,
+    "writable_mounts": []
+  },
+  "faults": [],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "repetitions": 1,
+  "perturbations": [],
+  "concurrency": 1,
+  "limits": {
+    "max_logical_time": 20,
+    "max_events": 2000,
+    "max_messages": 200,
+    "max_model_calls": 200,
+    "max_spawns": 0,
+    "max_cost_usd": 10.0,
+    "max_wall_seconds": 600.0,
+    "checkpoint_every_events": 4
+  },
+  "scorers": [
+    {
+      "name": "task_success",
+      "version": "1.0.0",
+      "kind": "deterministic",
+      "config": {},
+      "judge_model": null,
+      "judge_prompt": null,
+      "randomize_order": true,
+      "view": "omniscient"
+    },
+    {
+      "name": "efficiency",
+      "version": "1.0.0",
+      "kind": "efficiency",
+      "config": {},
+      "judge_model": null,
+      "judge_prompt": null,
+      "randomize_order": true,
+      "view": "omniscient"
+    },
+    {
+      "name": "coordination",
+      "version": "1.0.0",
+      "kind": "coordination",
+      "config": {},
+      "judge_model": null,
+      "judge_prompt": null,
+      "randomize_order": true,
+      "view": "omniscient"
+    },
+    {
+      "name": "safety",
+      "version": "1.0.0",
+      "kind": "safety",
+      "config": {},
+      "judge_model": null,
+      "judge_prompt": null,
+      "randomize_order": true,
+      "view": "omniscient"
+    }
+  ],
+  "retention": {
+    "keep_payloads": true,
+    "redact_patterns": []
+  },
+  "baseline_experiment": "smoke_coop_baseline"
+}

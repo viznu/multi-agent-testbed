@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install
+        run: uv pip install --system -e ".[dev]"
+
+      # Architecture first: an illegal import should fail before anything runs.
+      - name: Import boundaries
+        run: lint-imports
+      - name: Lint
+        run: ruff check src tests
+      - name: Types
+        run: mypy
+
+      # Unit, contract, integration, reproducibility and property tests. All
+      # offline and deterministic; no model or network access is required.
+      - name: Tests
+        run: pytest -q
+
+      # The catalog is a set of claims about integration status; a record that
+      # overstates itself fails here.
+      - name: Catalog honesty
+        run: matb catalog verify
+
+      - name: Vertical slice end to end
+        run: |
+          matb validate examples/solo_lookup.yaml
+          matb run examples/solo_lookup.yaml
+          matb run examples/coop_codeword.yaml
+          matb run examples/coop_baseline.yaml
+          matb run examples/mixed_split.yaml
+          matb compare smoke_coop_codeword smoke_coop_baseline

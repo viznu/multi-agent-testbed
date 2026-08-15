@@ -1,0 +1,96 @@
+[project]
+name = "multi-agent-testbed"
+version = "0.1.0"
+description = "A framework-neutral, event-sourced testbed for reproducible single- and multi-agent experiments."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+    "pydantic>=2.7",
+    "anyio>=4.3",
+    "typer>=0.12",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+parquet = ["pyarrow>=16.0"]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "hypothesis>=6.100",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "import-linter>=2.0",
+    "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+matb = "testbed_cli.main:app"
+
+# Plug-in discovery. Only the composition root (testbed_cli) reads these.
+[project.entry-points."testbed.packs"]
+smoke = "testbed_packs.smoke:PACK"
+
+[project.entry-points."testbed.topologies"]
+solo = "testbed_plugins.topologies.solo:TOPOLOGY"
+supervisor = "testbed_plugins.topologies.supervisor:TOPOLOGY"
+mesh = "testbed_plugins.topologies.mesh:TOPOLOGY"
+pipeline = "testbed_plugins.topologies.pipeline:TOPOLOGY"
+
+[project.entry-points."testbed.agents"]
+scripted = "testbed_adapters.agents.python.scripted:ADAPTER"
+cli = "testbed_adapters.agents.cli.adapter:ADAPTER"
+
+[project.entry-points."testbed.runners"]
+raw_session = "testbed_adapters.runners.raw.runner:RUNNER"
+
+[project.entry-points."testbed.scorers"]
+builtin = "testbed_eval.builtin_scorers:SCORERS"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/testbed_contracts",
+    "src/testbed_pack_sdk",
+    "src/testbed_kernel",
+    "src/testbed_store",
+    "src/testbed_eval",
+    "src/testbed_catalog",
+    "src/testbed_cli",
+    "src/testbed_adapters",
+    "src/testbed_plugins",
+    "src/testbed_packs",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = ["error::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+packages = [
+    "testbed_contracts",
+    "testbed_pack_sdk",
+    "testbed_kernel",
+    "testbed_store",
+    "testbed_eval",
+    "testbed_catalog",
+]
+strict = false
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["yaml", "pyarrow", "pyarrow.*"]
+ignore_missing_imports = true

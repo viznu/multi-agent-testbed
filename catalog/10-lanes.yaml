@@ -1,0 +1,312 @@
+# Coverage records for the fifteen market lanes.
+#
+# Every record here is `stub` or `external`. That is a deliberate statement:
+# NONE of these integrations exists in this repository yet. A stub carries the
+# schema, owner and intended port mapping; an external record is a metadata or
+# export link only, because the system is unavailable or has no runnable
+# interface.
+#
+# `source_url` is filled in only where the canonical URL is known. A missing URL
+# is a gap to close before the record can graduate, not an invitation to guess:
+# several projects in this space share a name, so an unqualified guess can point
+# an experiment at the wrong repository.
+records:
+  # -- lane 1: frameworks and harnesses ------------------------------------
+  - record_id: ukaisi/inspect-ai
+    title: Inspect AI
+    lane: 1
+    capabilities: [runner, agent, sandbox, scorer, benchmark]
+    runtime: in_process
+    maturity: stub
+    source_url: https://inspect.aisi.org.uk/
+    license: MIT
+    notes: >-
+      First planned integration adapter: mature model, tool and sandbox
+      integrations plus rescoring. Its multi-agent loop is deliberately NOT
+      used; World must remain the only scheduler on every execution path.
+
+  - record_id: harborframework/harbor
+    title: Harbor (Terminal-Bench harness)
+    lane: 1
+    capabilities: [runner, benchmark, sandbox]
+    runtime: oci
+    maturity: stub
+    source_url: https://www.harborframework.com/docs
+    notes: Official Terminal-Bench 2.0 harness; abstracts container providers.
+
+  - record_id: ai-alliance/cube-harness
+    title: CUBE harness
+    lane: 1
+    capabilities: [runner, benchmark]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/The-AI-Alliance/cube-harness
+    notes: Benchmark interchange; upstream harness is explicitly alpha.
+
+  - record_id: maseval/maseval
+    title: MASEval
+    lane: 1
+    capabilities: [runner, agent]
+    runtime: in_process
+    maturity: stub
+    source_url: https://pypi.org/project/maseval/
+    license: MIT
+    notes: Strong system-level abstraction; PyPI still marks it alpha.
+
+  # -- lane 2: product eval / LLMOps ---------------------------------------
+  - record_id: langfuse/langfuse
+    title: Langfuse
+    lane: 2
+    capabilities: [telemetry_sink]
+    runtime: remote
+    maturity: stub
+    source_url: https://langfuse.com/self-hosting
+    notes: >-
+      Candidate trace viewer, chosen only after a usability spike. A viewer is a
+      replaceable OpenTelemetry consumer and never stores canonical truth.
+
+  - record_id: arize/phoenix
+    title: Arize Phoenix
+    lane: 2
+    capabilities: [telemetry_sink]
+    runtime: remote
+    maturity: stub
+    notes: Alternative trace viewer; same replaceability requirement.
+
+  # -- lane 3: static knowledge and reasoning ------------------------------
+  - record_id: hendrycks/mmlu
+    title: MMLU / MMLU-Pro
+    lane: 3
+    capabilities: [benchmark, verifier]
+    runtime: in_process
+    maturity: external
+    contamination_notes: >-
+      Widely contaminated in modern pretraining corpora; a baseline for
+      comparison, not evidence of novel capability.
+
+  - record_id: openai/gsm8k
+    title: GSM8K
+    lane: 3
+    capabilities: [benchmark, verifier]
+    runtime: in_process
+    maturity: external
+    contamination_notes: Heavily contaminated; treat scores as a floor, not a measure.
+
+  # -- lane 4: agentic capability -------------------------------------------
+  - record_id: princeton-nlp/swe-bench-verified
+    title: SWE-bench Verified
+    lane: 4
+    capabilities: [benchmark, verifier, sandbox]
+    runtime: oci
+    maturity: stub
+    notes: Needs a pinned image digest and a licence review before it can run.
+
+  - record_id: gaia-benchmark/gaia
+    title: GAIA
+    lane: 4
+    capabilities: [benchmark, verifier]
+    runtime: subprocess
+    maturity: stub
+    notes: Candidate first external tool-use pack after the vertical slice.
+
+  # -- lane 5: agent safety and dangerous capability ------------------------
+  - record_id: uk-aisi/cybench
+    title: Cybench
+    lane: 5
+    capabilities: [benchmark, verifier, sandbox]
+    runtime: oci
+    maturity: stub
+    notes: >-
+      Restricted pack family. Requires a documented threat model and a stronger
+      sandbox than rootless OCI before any execution.
+
+  - record_id: centerforaisafety/wmdp
+    title: WMDP
+    lane: 5
+    capabilities: [benchmark]
+    runtime: in_process
+    maturity: external
+    data_terms: Restricted; review required before any local copy is made.
+
+  # -- lane 6: long-horizon and economic agency -----------------------------
+  - record_id: andonlabs/vending-bench
+    title: Vending-Bench family
+    lane: 6
+    capabilities: [world, benchmark, payoff]
+    runtime: subprocess
+    maturity: stub
+    notes: Long-lived SessionDriver candidate with real checkpoint pressure.
+
+  - record_id: theagentcompany/theagentcompany
+    title: TheAgentCompany
+    lane: 6
+    capabilities: [world, benchmark]
+    runtime: oci
+    maturity: stub
+
+  # -- lane 7: automated auditing and discovery -----------------------------
+  - record_id: meridianlabs-ai/inspect-petri
+    title: Inspect Petri 3.x
+    lane: 7
+    capabilities: [discovery_campaign, scanner]
+    runtime: in_process
+    maturity: stub
+    source_url: https://github.com/meridianlabs-ai/inspect_petri
+    notes: >-
+      Must pin 3.x explicitly: the 3.x Python API is incompatible with 2.x.
+      Generated cases enter quarantine and can never reach a frozen eval set.
+
+  - record_id: meridianlabs-ai/petri-bloom
+    title: Petri Bloom
+    lane: 7
+    capabilities: [discovery_campaign]
+    runtime: in_process
+    maturity: stub
+    source_url: https://meridianlabs-ai.github.io/petri_bloom/
+    notes: >-
+      Maintained implementation. The frozen safety-research/bloom repository is
+      provenance only, not the integration target.
+
+  # -- lane 8: transcript analysis and eval science -------------------------
+  - record_id: ukaisi/inspect-scout
+    title: Inspect Scout scanners
+    lane: 8
+    capabilities: [scanner]
+    runtime: in_process
+    maturity: stub
+    source_url: https://inspect.aisi.org.uk/scanners.html
+    notes: Scanners must be calibrated against a held-out human-labelled set.
+
+  # -- lane 9: jailbreak and adversarial robustness -------------------------
+  - record_id: centerforaisafety/harmbench
+    title: HarmBench
+    lane: 9
+    capabilities: [benchmark, scorer]
+    runtime: subprocess
+    maturity: stub
+
+  - record_id: nvidia/garak
+    title: garak
+    lane: 9
+    capabilities: [scanner, discovery_campaign]
+    runtime: subprocess
+    maturity: stub
+
+  # -- lane 10: preference and arena evaluation -----------------------------
+  - record_id: testbed/blinded-pairwise-arena
+    title: Blinded pairwise / team preference protocol
+    lane: 10
+    capabilities: [preference_protocol, judge, aggregator]
+    runtime: in_process
+    maturity: stub
+    notes: >-
+      Planned as a composition recipe over existing hooks (blinded pairing,
+      order randomisation, Bradley-Terry-style aggregation). It must not add a
+      sixth Pack SDK protocol.
+
+  - record_id: lmarena/chatbot-arena
+    title: Chatbot Arena
+    lane: 10
+    capabilities: [preference_protocol]
+    runtime: remote
+    maturity: external
+    notes: External unless an official runnable or export interface is available.
+
+  # -- lane 11: interpretability-based evaluation ---------------------------
+  - record_id: transformerlensorg/transformerlens
+    title: TransformerLens
+    lane: 11
+    capabilities: [interpretability_probe]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/TransformerLensOrg/TransformerLens
+    notes: >-
+      Runs only against compatible open-weight or local models. A run without
+      model-internal access stays valid and records `unavailable`.
+
+  - record_id: ndif-team/nnsight
+    title: NNsight
+    lane: 11
+    capabilities: [interpretability_probe]
+    runtime: subprocess
+    maturity: stub
+    source_url: https://github.com/ndif-team/nnsight
+
+  # -- lane 12: AI control ---------------------------------------------------
+  - record_id: ukaisi/control-arena
+    title: ControlArena
+    lane: 12
+    capabilities: [control_campaign, scorer]
+    runtime: in_process
+    maturity: stub
+    source_url: https://control-arena.aisi.org.uk/evaluation.html
+    license: MIT
+    notes: >-
+      Adapt its main-task / side-task / monitor / policy shape without giving it
+      scheduling ownership. Control reporting keeps usefulness, side-task
+      success, monitor quality and policy effects separate.
+
+  # -- lane 13: multi-agent environments and safety -------------------------
+  - record_id: farama/pettingzoo
+    title: PettingZoo
+    lane: 13
+    capabilities: [world, benchmark]
+    runtime: in_process
+    maturity: stub
+    notes: AEC and parallel patterns already shape the EnvDriver design.
+
+  - record_id: google-deepmind/meltingpot
+    title: Melting Pot
+    lane: 13
+    capabilities: [world, payoff, benchmark]
+    runtime: subprocess
+    maturity: stub
+    notes: Mixed motives and partner generalisation.
+
+  # -- lane 14: multi-agent orchestration frameworks ------------------------
+  - record_id: langchain-ai/langgraph
+    title: LangGraph
+    lane: 14
+    capabilities: [agent]
+    runtime: subprocess
+    maturity: stub
+    notes: Adapter target. Framework choice is an experimental variable.
+
+  - record_id: microsoft/autogen
+    title: AutoGen
+    lane: 14
+    capabilities: [agent]
+    runtime: subprocess
+    maturity: stub
+
+  - record_id: a2aproject/a2a
+    title: A2A 1.0
+    lane: 14
+    capabilities: [agent]
+    runtime: remote
+    maturity: stub
+    source_url: https://github.com/a2aproject/A2A/blob/main/docs/specification.md
+    notes: >-
+      Preferred remote-agent adapter, but not required for local agents. Protocol
+      era is pinned by the adapter, independently of any experiment manifest.
+
+  # -- lane 15: governance and assurance -------------------------------------
+  - record_id: nist/ai-rmf
+    title: NIST AI Risk Management Framework
+    lane: 15
+    capabilities: [assurance_profile, report_exporter]
+    runtime: in_process
+    maturity: stub
+    source_url: https://www.nist.gov/itl/ai-risk-management-framework
+    notes: >-
+      Evidence mapping only. An exporter produces an evidence index, coverage and
+      gaps. It does NOT issue a conformity verdict, and nothing here certifies
+      NIST, EU AI Act or responsible-scaling conformity.
+
+  - record_id: eu/ai-act-evidence-package
+    title: EU AI Act evidence package
+    lane: 15
+    capabilities: [assurance_profile, report_exporter]
+    runtime: in_process
+    maturity: external
+    notes: Evidence export and gap report only; never a legal conclusion.

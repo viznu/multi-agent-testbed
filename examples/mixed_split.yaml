@@ -1,0 +1,60 @@
+# Fixture 3: a mixed-motive two-agent task with hidden information and separate
+# individual and team payoffs. Both agents claim a share of a pot; if the claims
+# together exceed the pot, everyone gets nothing.
+experiment_id: smoke_mixed_split
+owner: testbed
+description: Mixed-motive two-agent task with hidden information.
+tags: [smoke, mixed_motive]
+
+task_pack:
+  name: smoke
+  revision: 1.0.0
+  sample_selector: [mixed_split]
+  license_accepted: true
+
+runner: raw_session
+baseline_experiment: smoke_solo_lookup
+
+world:
+  driver: session
+  topology: mesh
+  # Each trader's valuation stays private: claims are made without seeing the
+  # other side's information.
+  information: {}
+
+payoff:
+  mode: mixed_motive
+  team_weight: 0.5
+  individual_weight: 0.5
+  welfare: sum
+
+agents:
+  - agent_id: trader_1
+    adapter: scripted
+    role: worker
+    prompt: "Claim a share of the pot."
+    config:
+      steps:
+        - kind: world_action
+          action: { kind: claim, amount: 6 }
+
+  - agent_id: trader_2
+    adapter: scripted
+    role: worker
+    prompt: "Claim a share of the pot."
+    config:
+      steps:
+        - kind: world_action
+          action: { kind: claim, amount: 4 }
+
+seeds: [0]
+repetitions: 1
+
+limits:
+  max_logical_time: 20
+  checkpoint_every_events: 4
+
+scorers:
+  - { name: task_success, version: 1.0.0, kind: deterministic }
+  - { name: efficiency,   version: 1.0.0, kind: efficiency }
+  - { name: safety,       version: 1.0.0, kind: safety }

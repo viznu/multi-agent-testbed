@@ -1,0 +1,95 @@
+# Records for the plug-ins that actually ship in this repository.
+# These are the only entries that claim to be runnable here.
+records:
+  - record_id: testbed/raw-session-runner
+    title: Raw session runner
+    lane: 1
+    capabilities: [runner]
+    runtime: in_process
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    revision: "0.1.0"
+    license: MIT
+    entry_point: testbed_adapters.runners.raw.runner:RUNNER
+    supported_drivers: [session, env]
+    notes: >-
+      Provisions dependencies and translates agent calls. Owns no routing,
+      spawning, timeout resolution, visibility, faults or retries.
+
+  - record_id: testbed/scripted-agent
+    title: Scripted deterministic agent
+    lane: 14
+    capabilities: [agent]
+    runtime: in_process
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    revision: "0.1.0"
+    license: MIT
+    entry_point: testbed_adapters.agents.python.scripted:ADAPTER
+    notes: >-
+      A fixture, not a model. Used so the contracts and the whole vertical slice
+      can be exercised offline and bit-exactly.
+
+  - record_id: testbed/cli-agent
+    title: CLI agent adapter
+    lane: 14
+    capabilities: [agent]
+    runtime: subprocess
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    revision: "0.1.0"
+    license: MIT
+    entry_point: testbed_adapters.agents.cli.adapter:ADAPTER
+    notes: Opaque external process; playback_only, cannot be snapshotted.
+
+  - record_id: testbed/smoke-pack
+    title: Smoke pack (solo, cooperative, mixed-motive)
+    lane: 13
+    capabilities: [benchmark, world, verifier]
+    runtime: in_process
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    revision: "1.0.0"
+    license: MIT
+    entry_point: testbed_packs.smoke:PACK
+    contamination_notes: >-
+      Not a capability benchmark. Three deterministic fixtures that exist to
+      test the contracts; no result from them should be reported as capability.
+
+  - record_id: testbed/builtin-scorers
+    title: Built-in scorers (success, coordination, efficiency, safety, judge)
+    lane: 8
+    capabilities: [scorer, judge, aggregator]
+    runtime: in_process
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    revision: "1.0.0"
+    license: MIT
+    entry_point: testbed_eval.builtin_scorers:SCORERS
+
+  - record_id: testbed/process-sandbox
+    title: Local process sandbox
+    lane: 1
+    capabilities: [sandbox]
+    runtime: subprocess
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    revision: "0.1.0"
+    license: MIT
+    entry_point: testbed_adapters.sandboxes.process.sandbox:SANDBOX
+    notes: >-
+      Reduces accidents; it is NOT an isolation boundary for untrusted code.
+      Rootless OCI is for trusted fixtures and gVisor/Kata/microVM for hostile
+      workloads; neither ships here.
+
+  - record_id: testbed/otel-span-export
+    title: OpenTelemetry span projection
+    lane: 2
+    capabilities: [telemetry_sink, report_exporter]
+    runtime: in_process
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    revision: "0.1.0"
+    license: MIT
+    entry_point: testbed_adapters.telemetry.otel.exporter:export_spans
+    notes: Spans are an export. Canonical events remain the source of truth.

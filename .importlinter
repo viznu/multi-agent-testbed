@@ -1,0 +1,57 @@
+; Import boundaries, enforced in CI with `lint-imports`.
+; tests/contract/test_import_boundaries.py enforces the same rules from pytest,
+; so the architecture stays checked even without this tool installed.
+
+[importlinter]
+root_packages =
+    testbed_contracts
+    testbed_pack_sdk
+    testbed_kernel
+    testbed_store
+    testbed_eval
+    testbed_catalog
+    testbed_cli
+    testbed_adapters
+    testbed_plugins
+    testbed_packs
+
+[importlinter:contract:layers]
+name = Testbed layers
+type = layers
+layers =
+    testbed_cli
+    testbed_adapters | testbed_plugins | testbed_packs
+    testbed_kernel | testbed_store | testbed_eval | testbed_catalog
+    testbed_pack_sdk
+    testbed_contracts
+
+[importlinter:contract:kernel-knows-no-plugins]
+name = The kernel never imports an adapter, plugin or pack
+type = forbidden
+source_modules =
+    testbed_kernel
+    testbed_store
+    testbed_eval
+    testbed_catalog
+forbidden_modules =
+    testbed_adapters
+    testbed_plugins
+    testbed_packs
+    testbed_cli
+
+[importlinter:contract:core-layers-are-independent]
+name = Kernel, store, eval and catalog are siblings
+type = independence
+modules =
+    testbed_kernel
+    testbed_store
+    testbed_eval
+    testbed_catalog
+
+[importlinter:contract:plugins-are-independent]
+name = Adapters, topology plugins and packs never import one another
+type = independence
+modules =
+    testbed_adapters
+    testbed_plugins
+    testbed_packs

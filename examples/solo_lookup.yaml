@@ -1,0 +1,55 @@
+# Fixture 1 of the vertical slice: a single agent, a deterministic tool call and
+# a submission. Nothing here measures capability; it exercises the contracts.
+experiment_id: smoke_solo_lookup
+owner: testbed
+description: Single-agent deterministic tool task.
+tags: [smoke, single_agent]
+
+task_pack:
+  name: smoke
+  revision: 1.0.0
+  sample_selector: [solo_lookup]
+  license_accepted: true
+
+runner: raw_session
+
+world:
+  driver: session
+  topology: solo
+  communication:
+    delivery_latency: 1
+
+agents:
+  - agent_id: solo
+    adapter: scripted
+    role: worker
+    model: fake/deterministic
+    prompt: "Find the access code, then submit it."
+    config:
+      steps:
+        # One turn, three emissions: look the code up, confirm it, submit it.
+        - - kind: tool_call
+            tool: code_lookup
+            tool_args: { key: access_code }
+          - kind: message
+            content: "Found the access code."
+          - kind: world_action
+            action: { kind: submit, answer: "{private.code}" }
+
+seeds: [0]
+repetitions: 1
+
+limits:
+  max_logical_time: 20
+  checkpoint_every_events: 4
+
+scorers:
+  - { name: task_success, version: 1.0.0, kind: deterministic }
+  - { name: efficiency,   version: 1.0.0, kind: efficiency }
+  - { name: coordination, version: 1.0.0, kind: coordination }
+  - { name: safety,       version: 1.0.0, kind: safety }
+  - name: judge_quality
+    version: 1.0.0
+    kind: judge
+    judge_model: fake/hash-rubric
+    judge_prompt: "Rate how directly the agent solved the task."
