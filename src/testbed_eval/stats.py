@@ -30,6 +30,12 @@ class PairedComparison:
     def ci_excludes_zero(self) -> bool:
         return self.ci_low > 0.0 or self.ci_high < 0.0
 
+    @property
+    def effect_size_text(self) -> str:
+        if math.isinf(self.effect_size):
+            return "d=undefined (every pair moved by the same amount)"
+        return f"d={self.effect_size:.3f}"
+
     def summary(self) -> str:
         direction = "higher" if self.mean_difference > 0 else "lower"
         verdict = (
@@ -37,10 +43,12 @@ class PairedComparison:
             if self.ci_excludes_zero
             else "interval includes zero; difference is not resolved at this sample size"
         )
+        caveat = "" if self.n_pairs >= 5 else f"; only {self.n_pairs} pairs, treat as a pilot"
         return (
             f"n={self.n_pairs} pairs; A={self.mean_a:.4f} B={self.mean_b:.4f}; "
             f"A is {abs(self.mean_difference):.4f} {direction} "
-            f"(95% CI [{self.ci_low:.4f}, {self.ci_high:.4f}], d={self.effect_size:.3f}); {verdict}"
+            f"(95% CI [{self.ci_low:.4f}, {self.ci_high:.4f}], {self.effect_size_text}); "
+            f"{verdict}{caveat}"
         )
 
 
@@ -56,8 +64,20 @@ def stdev(values: Sequence[float]) -> float:
 
 
 def paired_cohens_d(differences: Sequence[float]) -> float:
+    """Paired Cohen's d.
+
+    With zero variance the statistic is undefined, not zero: every pair moving
+    by exactly the same non-zero amount is the *strongest* separation, and
+    reporting `d=0.000` for it would read as "no effect". Infinity is returned
+    so the caller has to say something honest about it.
+    """
     sd = stdev(differences)
-    return mean(differences) / sd if sd else 0.0
+    if sd:
+        return mean(differences) / sd
+    average = mean(differences)
+    if average == 0:
+        return 0.0
+    return math.inf if average > 0 else -math.inf
 
 
 def bootstrap_ci(

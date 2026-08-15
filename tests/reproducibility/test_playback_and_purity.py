@@ -137,3 +137,24 @@ def test_judge_scores_stay_separate_from_hard_success(solo_manifest, tmp_path: P
     assert judged.detail["judge_model"] == "fake/hash-rubric"
     assert judged.detail["prompt_digest"]
     assert judged.detail["transcript_view"] == "omniscient"
+
+
+def test_scoring_ground_truth_never_enters_an_agent_view(coop_run):
+    """Verifier results and settled payoffs are ground truth, not observations.
+
+    They are recorded in full for auditing, and they must not appear in any
+    agent's projection: a judge or a viewer reading that projection would
+    otherwise be handed the answer key.
+    """
+    _, result, workspace = coop_run
+    store, _ = Workspace(workspace).open()
+    events = list(store.read(result.run.run_id))
+
+    omniscient = EventView(events, view=OMNISCIENT_VIEW)
+    assert omniscient.of_kind(EventKind.VERIFIER_RESULT), "ground truth must still be recorded"
+
+    for view in ("researcher_1", "researcher_2", PUBLIC_VIEW):
+        projected = EventView(events, view=view)
+        assert projected.of_kind(EventKind.VERIFIER_RESULT) == ()
+        assert projected.of_kind(EventKind.PAYOFF_ASSIGNED) == ()
+    store.close()

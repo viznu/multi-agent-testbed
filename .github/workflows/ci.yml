@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
 
 jobs:
   check:
@@ -32,6 +34,13 @@ jobs:
       - name: Catalog honesty
         run: matb catalog verify
 
+      # Every integration must be in a known state, and the repository must not
+      # ship with anything silently switched off.
+      - name: Integration status
+        run: |
+          matb integrations list
+          matb integrations verify
+
       - name: Vertical slice end to end
         run: |
           matb validate examples/solo_lookup.yaml
@@ -40,3 +49,17 @@ jobs:
           matb run examples/coop_baseline.yaml
           matb run examples/mixed_split.yaml
           matb compare smoke_coop_codeword smoke_coop_baseline
+          matb run examples/lm_eval_wiring_check.yaml
+          matb run examples/lm_eval_floor_baseline.yaml
+          matb compare lm_eval_wiring_check lm_eval_floor_baseline
+
+  # Scorer parity against upstream lm-evaluation-harness. Needs the extra, so it
+  # runs on a schedule rather than on every pull request.
+  parity:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv pip install --system -e ".[dev,lm-eval]"
+      - run: pytest tests/parity -q -p no:cacheprovider --override-ini addopts=""

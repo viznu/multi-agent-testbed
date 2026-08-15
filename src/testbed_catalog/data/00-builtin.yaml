@@ -126,3 +126,30 @@ records:
       Four orchestration policies built only from World primitives. They propose
       routing; World validates and commits it. Switching them off individually is
       not meaningful -- a manifest simply names the one it wants.
+
+  - record_id: testbed/lm-eval-pack
+    title: lm-evaluation-harness task pack
+    lane: 3
+    capabilities: [benchmark, verifier, scorer]
+    runtime: in_process
+    maturity: experimental
+    source_url: https://example.invalid/multi-agent-testbed
+    source_verified: true
+    revision: "0.1.0"
+    license: MIT
+    entry_point: testbed_packs.lm_eval:PACK
+    plugin_group: packs
+    plugin_name: lm_eval
+    supported_drivers: [session]
+    contamination_notes: >-
+      Most datasets reachable through this pack (MMLU, GSM8K, HellaSwag and
+      friends) are heavily contaminated in modern pretraining corpora. Treat
+      results as a baseline for comparison, never as evidence of novel
+      capability.
+    notes: >-
+      Declares no required import on purpose: the fixture and JSONL sources work
+      with no extra dependency, so the whole code path stays testable offline.
+      Only `source: lm_eval` needs the `lm-eval` extra, and it raises a precise
+      error naming it. Scores here are generative accuracy, which is NOT
+      comparable with published log-likelihood accuracy. Stays `experimental`
+      until the scorer-parity job has run against upstream for a given task.

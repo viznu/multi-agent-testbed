@@ -49,6 +49,22 @@ Gate, all covered by tests:
 * reruns report their declared reproducibility level rather than promising
   equality (`matb rerun`).
 
+### Integration switching and the lm-eval bridge
+
+| Deliverable | Status |
+|---|---|
+| Four-state integration model with remediation messages | done |
+| `integrations.toml` switches, resolved through an explicit path order | done |
+| Catalog carrying pip extra, required imports/binaries and plug-in binding | done |
+| `matb integrations list\|enable\|disable\|verify` | done |
+| Per-experiment pack configuration (`task_pack.config`) | done |
+| lm-eval task pack: fixture, JSONL and `lm_eval` sources | done |
+| Answer metrics: exact, normalised, numeric, multiple choice | done |
+| Scorer-parity job against upstream | written, runs only where `lm_eval` is installed |
+
+The lm-eval pack is `experimental`, not `certified`: parity with upstream
+scoring is unverified until that job has run for a given task.
+
 ## Not implemented
 
 Nothing below exists in code here. The catalog carries a `stub` or `external`

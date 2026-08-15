@@ -55,6 +55,7 @@ def _builtins() -> dict[str, dict[str, Any]]:
     from testbed_adapters.agents.python.scripted import ADAPTER as scripted_adapter
     from testbed_adapters.runners.raw.runner import RUNNER as raw_runner
     from testbed_eval.builtin_scorers import SCORERS
+    from testbed_packs.lm_eval import PACK as lm_eval_pack
     from testbed_packs.smoke import PACK as smoke_pack
     from testbed_plugins.topologies.mesh import TOPOLOGY as mesh
     from testbed_plugins.topologies.pipeline import TOPOLOGY as pipeline
@@ -62,7 +63,7 @@ def _builtins() -> dict[str, dict[str, Any]]:
     from testbed_plugins.topologies.supervisor import TOPOLOGY as supervisor
 
     return {
-        "packs": {"smoke": smoke_pack},
+        "packs": {"smoke": smoke_pack, "lm_eval": lm_eval_pack},
         "topologies": {
             "solo": solo,
             "supervisor": supervisor,
@@ -156,6 +157,9 @@ def compose(
     store, artifacts = workspace.open()
 
     pack = _resolve(registry.packs, "packs", manifest.task_pack.name, index)
+    # A pack may shape itself to the experiment (which task, how many items,
+    # which metric) before anything runs.
+    pack = pack.configured(manifest.task_pack.config)
     topology = _resolve(registry.topologies, "topologies", manifest.world.topology, index)
     runner_factory = _resolve(registry.runners, "runners", manifest.runner, index)
     for spec in manifest.agents:

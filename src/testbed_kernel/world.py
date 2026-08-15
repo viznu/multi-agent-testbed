@@ -279,6 +279,9 @@ class World:
             kind=EventKind.PAYOFF_ASSIGNED,
             actor_id=WORLD_ACTOR,
             logical_time=self.logical_time,
+            # Settled payoffs are ground truth. A pack that wants agents to see
+            # their score during an episode emits it as a state change instead.
+            visibility=VisibilityPolicy.OMNISCIENT_ONLY,
             payload={"payoffs": dict(self.payoffs), "mode": str(self.manifest.payoff.mode)},
         )
 

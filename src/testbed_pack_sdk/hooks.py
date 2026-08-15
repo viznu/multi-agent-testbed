@@ -142,6 +142,27 @@ class Pack(BaseModel):
     scorers: tuple[Any, ...] = ()
     description: str = ""
 
+    #: Optional `(pack, config) -> Pack` callable applied by the composition
+    #: root before a run, using `manifest.task_pack.config`.
+    #:
+    #: This refines hook family 1 rather than adding a sixth one: a pack that
+    #: needs no configuration leaves it unset and `configured()` returns itself.
+    #: Configuration must be pure -- it selects and shapes task cases, and must
+    #: not execute anything.
+    configurator: Any = None
+
+    def configured(self, config: Mapping[str, Any] | None) -> Pack:
+        """Return the pack this experiment should actually run."""
+        if self.configurator is None or not config:
+            return self
+        configured = self.configurator(self, dict(config))
+        if not isinstance(configured, Pack):
+            raise TypeError(
+                f"pack {self.name!r}: configurator returned {type(configured).__name__}, "
+                "expected a Pack"
+            )
+        return configured
+
     def case(self, task_id: str) -> TaskCase:
         for c in self.tasks.cases():
             if c.task_id == task_id:

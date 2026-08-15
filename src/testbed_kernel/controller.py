@@ -20,6 +20,7 @@ from testbed_contracts.enums import (
     EventKind,
     ReproducibilityLevel,
     RunState,
+    VisibilityPolicy,
     WorldDriverKind,
 )
 from testbed_contracts.events import canonical_event_hash
@@ -398,6 +399,11 @@ class RunController:
             kind=EventKind.VERIFIER_RESULT,
             actor_id=WORLD_ACTOR,
             logical_time=world.logical_time,
+            # Ground truth about scoring, including the expected answer. It is
+            # never delivered to an agent, and it must not appear in an agent's
+            # projected view either -- a judge or a viewer reading that view
+            # would otherwise be handed the answer key.
+            visibility=VisibilityPolicy.OMNISCIENT_ONLY,
             payload={
                 "verifier": verifier.name,
                 "version": verifier.version,

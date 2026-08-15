@@ -1,0 +1,53 @@
+# A wiring check for the lm-evaluation-harness task pack.
+#
+# READ THIS BEFORE QUOTING ANY NUMBER FROM IT. The agent is handed the answer as
+# a private fact, so accuracy is 1.0 by construction. This manifest demonstrates
+# that items, prompts, submission, verification, metrics and events flow end to
+# end. It measures NOTHING about capability.
+#
+# The items are synthetic fixtures written for this repository, not a benchmark.
+# A real run needs `source: lm_eval` (which needs the lm-eval extra) and a
+# model-backed agent adapter, which does not exist in this repository yet.
+experiment_id: lm_eval_wiring_check
+owner: testbed
+description: End-to-end wiring check for the lm-eval task pack. Not a capability measurement.
+tags: [smoke, lm_eval, wiring_check]
+
+task_pack:
+  name: lm_eval
+  revision: 0.1.0
+  license_accepted: true
+  config:
+    source: fixture
+    fixture: synthetic_arithmetic
+    metric: numeric
+    num_fewshot: 1
+    answer_hint: true
+
+runner: raw_session
+
+world:
+  driver: session
+  topology: solo
+
+agents:
+  - agent_id: solver
+    adapter: scripted
+    role: worker
+    prompt: "Answer the question and submit the result."
+    config:
+      steps:
+        - kind: world_action
+          action: { kind: submit, answer: "{private.answer}" }
+
+seeds: [0]
+repetitions: 1
+
+limits:
+  max_logical_time: 20
+  checkpoint_every_events: 4
+
+scorers:
+  - { name: task_success, version: 1.0.0, kind: deterministic }
+  - { name: efficiency,   version: 1.0.0, kind: efficiency }
+  - { name: safety,       version: 1.0.0, kind: safety }

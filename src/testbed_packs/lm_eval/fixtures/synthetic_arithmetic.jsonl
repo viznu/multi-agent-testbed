@@ -1,0 +1,5 @@
+{"id": "arith_0000", "input": "What is 12 + 7?", "target": "19", "metadata": {"kind": "addition", "synthetic": true}}
+{"id": "arith_0001", "input": "What is 45 - 18?", "target": "27", "metadata": {"kind": "subtraction", "synthetic": true}}
+{"id": "arith_0002", "input": "A shelf holds 6 rows of 4 books. How many books are on the shelf?", "target": "24", "metadata": {"kind": "multiplication", "synthetic": true}}
+{"id": "arith_0003", "input": "Divide 81 by 9.", "target": "9", "metadata": {"kind": "division", "synthetic": true}}
+{"id": "arith_0004", "input": "A tank holds 250 litres and 85 litres are drained. How many litres remain?", "target": "165", "metadata": {"kind": "subtraction", "synthetic": true}}

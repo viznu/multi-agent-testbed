@@ -1,0 +1,3 @@
+{"id": "choice_0000", "input": "Which of these is a primary colour?", "target": "blue", "choices": ["mauve", "blue", "beige", "taupe"], "metadata": {"synthetic": true}}
+{"id": "choice_0001", "input": "Which unit measures electrical resistance?", "target": "ohm", "choices": ["ohm", "newton", "pascal", "lumen"], "metadata": {"synthetic": true}}
+{"id": "choice_0002", "input": "Which of these is a prime number?", "target": "17", "choices": ["21", "17", "27", "33"], "metadata": {"synthetic": true}}

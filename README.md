@@ -112,7 +112,63 @@ matb playback <RUN_ID> --view agent:researcher_2
 
 Other commands: `matb validate`, `matb resume`, `matb rescore`, `matb rerun`,
 `matb export --format bundle|parquet|otel|jsonl`, `matb catalog list|verify`,
-`matb doctor`.
+`matb integrations list|enable|disable`, `matb doctor`.
+
+## Switching integrations on and off
+
+The catalog describes about a hundred tools across the fifteen lanes of the
+evaluation landscape. Each record states honestly what it is:
+
+```bash
+matb integrations list
+```
+
+```text
+  active         testbed/lm-eval-pack       packs:lm_eval
+  not_installed  someone/thing              packs:thing
+      missing thing_sdk; install with: pip install 'multi-agent-testbed[thing]'
+
+  8 active, 0 switched off, 0 not installed, 90 catalogued with no adapter here
+```
+
+Four states, never conflated: `active`, `disabled` (switched off on purpose),
+`not_installed` (an adapter exists, its dependencies do not), and `no_adapter`
+(a catalog record only — nothing has been built). Naming a plug-in that is off
+or missing fails the run with a remediation; it never silently falls back to
+something else.
+
+Most of the catalog is `no_adapter` today, and commercial hosted services are
+recorded as excluded with the reason. See
+[docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for coverage per adapter and how to
+add one.
+
+## Static benchmarks through the lm-eval bridge
+
+lm-evaluation-harness is integrated as a **task source, not a runner**: it
+supplies items and metric conventions, World still schedules, and the events it
+produces are the same events as any other run. That is what lets a static
+reasoning item be compared with an agentic one — or wrapped in a debate or jury
+protocol by changing the topology.
+
+```bash
+matb run examples/lm_eval_wiring_check.yaml
+matb run examples/lm_eval_floor_baseline.yaml
+matb compare lm_eval_wiring_check lm_eval_floor_baseline
+```
+
+```text
+  n=4 pairs; A=1.0000 B=0.0000; A is 1.0000 higher
+  (95% CI [1.0000, 1.0000], d=undefined (every pair moved by the same amount));
+  interval excludes zero; only 4 pairs, treat as a pilot
+  arms are compute-matched (1.0 vs 1.0 model calls)
+```
+
+**Both examples measure nothing.** The first hands the agent the answer; the
+second submits a constant. They demonstrate the plumbing, and the floor arm is
+what would catch a pipeline reporting success for everything. Real datasets need
+`source: lm_eval` (the `lm-eval` extra) and a model-backed agent adapter, which
+does not exist here yet. See [docs/LM_EVAL.md](docs/LM_EVAL.md), particularly on
+why generative accuracy is not comparable with published log-likelihood scores.
 
 ## The three fixture tasks
 
@@ -139,7 +195,7 @@ src/testbed_catalog/     tool metadata and its honesty rules
 src/testbed_cli/         the composition root — the only place plug-ins are discovered
 src/testbed_adapters/    agent, runner, sandbox and telemetry adapters
 src/testbed_plugins/     topology plug-ins
-src/testbed_packs/       the three fixture tasks
+src/testbed_packs/       the three fixture tasks, and the lm-eval task pack
 ```
 
 The kernel never imports an adapter, a plug-in or a pack; the composition root
@@ -169,7 +225,7 @@ five, not a sixth kind of hook.
 ## Development
 
 ```bash
-pytest                 # 118 tests: contracts, integration, reproducibility, properties
+pytest                 # 182 tests: contracts, integration, reproducibility, properties
 ruff check src tests
 mypy
 lint-imports           # import boundaries
@@ -182,6 +238,9 @@ fixture agent, so the whole thing is reproducible on any machine.
 
 - [docs/CONCEPTS.md](docs/CONCEPTS.md) — run identity, views, reproducibility
   levels, eval-set kinds, terminal states.
+- [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) — the four states, how switching
+  resolves, coverage per adapter, what is excluded and why.
+- [docs/LM_EVAL.md](docs/LM_EVAL.md) — the lm-eval bridge and its limits.
 - [docs/ROADMAP.md](docs/ROADMAP.md) — what is implemented and what is not.
 - [docs/adr/](docs/adr/) — the architectural decisions and their consequences.
 

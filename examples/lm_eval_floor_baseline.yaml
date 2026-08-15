@@ -1,0 +1,51 @@
+# The floor baseline for the same items: an agent that submits a constant.
+#
+# Its purpose is to make the wiring check interpretable. A pipeline that reports
+# 1.0 for a solver and 1.0 for an agent answering "0" to everything is broken,
+# and this arm is what catches that.
+#
+# Same items, same verifier, same metric, same compute budget as
+# lm_eval_wiring_check -- only the agent's behaviour differs.
+experiment_id: lm_eval_floor_baseline
+owner: testbed
+description: Constant-answer floor for the lm-eval wiring check.
+tags: [smoke, lm_eval, baseline]
+
+task_pack:
+  name: lm_eval
+  revision: 0.1.0
+  license_accepted: true
+  config:
+    source: fixture
+    fixture: synthetic_arithmetic
+    metric: numeric
+    num_fewshot: 1
+    answer_hint: false
+
+runner: raw_session
+
+world:
+  driver: session
+  topology: solo
+
+agents:
+  - agent_id: solver
+    adapter: scripted
+    role: worker
+    prompt: "Answer the question and submit the result."
+    config:
+      steps:
+        - kind: world_action
+          action: { kind: submit, answer: "0" }
+
+seeds: [0]
+repetitions: 1
+
+limits:
+  max_logical_time: 20
+  checkpoint_every_events: 4
+
+scorers:
+  - { name: task_success, version: 1.0.0, kind: deterministic }
+  - { name: efficiency,   version: 1.0.0, kind: efficiency }
+  - { name: safety,       version: 1.0.0, kind: safety }

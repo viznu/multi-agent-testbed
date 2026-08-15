@@ -23,8 +23,11 @@ records:
     requires: [lm_eval]
     notes: >-
       Highest coverage per adapter in the whole catalog: one bridge reaches most
-      of lane 3. Integrated as a task/metric source rather than as a runner --
-      see testbed/lm-eval-pack -- so World keeps ownership of scheduling.
+      of lane 3. The bridge exists (testbed/lm-eval-pack) and treats this project
+      as a source of task items and metric conventions, not as a runner, so World
+      keeps ownership of scheduling. This record stays a stub because the
+      dependency itself is not installed by default and no scorer-parity run has
+      been performed against it.
 
   - record_id: stanford-crfm/helm
     title: HELM

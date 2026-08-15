@@ -117,3 +117,28 @@ def test_compute_mismatch_is_reported_not_hidden():
     report = compare_experiments(a, b, experiment_a="a", experiment_b="b", metric="success")
     assert not report.compute_matched
     assert "NOT compute-matched" in report.summary()
+
+
+def test_zero_variance_is_undefined_not_zero_effect():
+    """Perfect separation must not be reported as "no effect"."""
+    import math
+
+    a = {f"t{i}": 1.0 for i in range(5)}
+    b = {f"t{i}": 0.0 for i in range(5)}
+    stats = compare_paired(a, b, iterations=200)
+    assert math.isinf(stats.effect_size)
+    assert "d=undefined" in stats.summary()
+    assert stats.ci_excludes_zero
+
+
+def test_identical_arms_report_a_genuine_zero():
+    a = {f"t{i}": 1.0 for i in range(5)}
+    stats = compare_paired(a, dict(a), iterations=200)
+    assert stats.effect_size == 0.0
+    assert "d=0.000" in stats.summary()
+
+
+def test_small_samples_are_labelled_as_pilots():
+    a = {f"t{i}": float(i) for i in range(3)}
+    b = {f"t{i}": 0.0 for i in range(3)}
+    assert "treat as a pilot" in compare_paired(a, b, iterations=100).summary()
